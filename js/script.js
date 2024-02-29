@@ -107,7 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     function showModalByScroll() {
-        if (document.documentElement.scrollTop >= '1000') {
+        if (document.documentElement.scrollTop >= '3000') {
             showModal();
             window.removeEventListener('scroll', showModalByScroll);
             clearInterval(modalTimer);
@@ -177,4 +177,177 @@ document.addEventListener('DOMContentLoaded', () => {
     vegy.createMenuItem();
     elite.createMenuItem();
     post.createMenuItem();
+
+    // Forms
+
+    const forms = document.querySelectorAll('form');
+
+    const message = {
+        loading: 'Загрузка',
+        success: 'Спасибо! Мы с вами свяжемся',
+        failure: 'Что-то пошло не так...'
+    };
+
+    forms.forEach(item => {
+        postData(item);
+    });
+
+    function postData(form) {
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const statusMessage = document.createElement('div');
+            statusMessage.classList.add('status');
+            statusMessage.innerHTML = `
+                <img src="./spinner.svg" alt="Loading">
+                <p>${message.loading}</p>
+            `;
+            form.append(statusMessage);
+            document.querySelector('.status').style.cssText = 'display: flex; justify-content: center;align-items: center; margin-top: 10px';
+            
+            // XML Вариант
+            // const request = new XMLHttpRequest();
+            // request.open('POST', 'server.php');
+
+            // XML Вариант
+            // request.setRequestHeader('Content-type', 'application/json');
+
+            const formData = new FormData(form); 
+
+            // const object = {};
+            // formData.forEach(function(value, key){
+            //     object[key] = value;
+            // });
+
+            // const json = JSON.stringify(object)
+
+
+            fetch('server.php', {
+                method: 'POST',
+                // headers: {
+                //     'Content-type': 'application/json'
+                // },
+                body: formData
+            }).then(data => data.text(
+
+            )).then(data => {
+                console.log(data)
+                statusMessage.remove();
+                showThanksModal(message.success)
+            }).catch(() => {
+                showThanksModal(message.failure)
+            }).finally(()=>{
+                form.reset();
+            });
+
+            // XML Вариант
+            //request.send(json);
+
+            // request.addEventListener('load', ()=> {
+            //     if (request.status === 200) {
+            //         console.log(request.response)
+            //         // statusMessage.textContent = message.success;
+            //         form.reset();
+            //         // setTimeout(() => {
+            //         statusMessage.remove();
+            //         // }, 2000)
+            //         showThanksModal(message.success)
+            //     } else {
+            //         showThanksModal(message.failure)
+            //     }
+            // });
+        });
+    };
+
+    function showThanksModal(message) {
+        const prevModalDialog = document.querySelector('.modal__dialog');
+
+        prevModalDialog.style.display = 'none';
+        showModal();
+
+        const thanksModal = document.createElement('div');
+        thanksModal.classList.add('modal__dialog');
+        thanksModal.innerHTML = `
+            <div class='modal__content'>
+                <div class="modal__close">
+                    &times;
+                </div>
+                <div class="modal__title">
+                    ${message}
+                </div>
+            </div>
+        `;
+
+        document.querySelector('.modal').append(thanksModal);
+        document.querySelectorAll('.modal__close')[1].addEventListener('click', () =>{
+            hideModal();
+            thanksModal.remove();
+            prevModalDialog.style.display = 'block'
+            clearInterval(autoCloseModal);
+        });
+        document.querySelector('.modal').addEventListener('click', (e) => {
+            if (e.target === document.querySelector('.modal')) {
+                hideModal();
+                thanksModal.remove();
+                prevModalDialog.style.display = 'block'
+                clearInterval(autoCloseModal);
+            }
+        });
+        document.addEventListener('keydown', (e) => {
+            if (document.querySelector('.modal').style.display === 'block' && e.code === 'Escape') {
+                hideModal();
+                thanksModal.remove();
+                prevModalDialog.style.display = 'block'
+                clearInterval(autoCloseModal);
+            }
+        })
+
+        const autoCloseModal = setTimeout(function(){
+            hideModal();
+            thanksModal.remove();
+            prevModalDialog.style.display = 'block'
+        }, 5000);
+    }
 });
+
+
+// Дaнa cтрoкa, cocтoящaя из бyкв aнглийcкoгo aлфaвитa, знaкoв прeпинaния и прoбeлoв. Трeбyeтcя пocчитaть cкoлькo рaз cлoвo "Tinkoff" мoжнo coбрaть из бyкв этoй cтрoки. Кaждyю бyквy мoжнo иcпoльзoвaть тoлькo oдин рaз, рeгиcтр знaчeния нe имeeт.
+
+// Пример 1
+
+// countWord("Kate got a job offer from Invest team") => 1
+
+// Oтвeт 1, пoтoмy чтo бyквa T ecть в cлoвe "Kate", бyквы I и N – в "Invest", K в "Kate" и O, F, F – в cлoвe "offer".
+
+// Пример 2
+
+// countWord("Kate got a job offer from Tinkoff Invest") => 2
+
+// Вaм нaдo дoпиcaть фyнкцию countWord. Нe мeняйтe кoд ввoдa-вывoдa и нe дoбaвляйтe дoпoлнитeльныe пoдcкaзки для ввoдa – кoд прoвeряeтcя нa aвтoтecтaх.
+
+// Кoгдa зaкoнчитe, нaжмитe кнoпкy «Зaпycк». Ecли тecты нe прoшли, иcпрaвьтe oшибки и зaпycтитe пoвтoрнo.
+
+
+function countWord(str) {
+    str = str.toLowerCase();
+    check = 0;
+    let arr = str.split('');
+    check = arr.filter(item=>item == 't').length;
+    if (arr.filter(item=>item == 'i').length < check) check = arr.filter(item=>item == 'i').length;
+    if (arr.filter(item=>item == 'n').length < check) check = arr.filter(item=>item == 'n').length;
+    if (arr.filter(item=>item == 'k').length < check) check = arr.filter(item=>item == 'k').length;
+    if (arr.filter(item=>item == 'o').length < check) check = arr.filter(item=>item == 'o').length;
+    if ((arr.filter(item=>item == 'f').length/2) < check) check = arr.filter(item=>item == 'f').length;
+    console.log(arr.filter(item=>item == 't'))
+    console.log(arr.filter(item=>item == 'i'))
+    console.log(arr.filter(item=>item == 'n'))
+    console.log(arr.filter(item=>item == 'k'))
+    console.log(arr.filter(item=>item == 'o'))
+    console.log(arr.filter(item=>item == 'f'))
+
+    console.log(check)
+
+}
+
+countWord("MgaiZCMdDbVyj ENEmbUrCwP THaExaAhqLhAUyY OhcWDLYIfxqnuVNXI MtKKyx rSSBQtVOLdzRxMKbg YkBCGzlgNgfKvCeuHXPjjJUhOpqkKypXAy hzlawosA oWdsvfSBEUNMwiMHfuDwNHBvtVsNXBOVEfZ swWyLAi ahzPrQsgllrrFmDFNawPTNeqjwywhpjuwSrnABfyutViBEbkzmuy ZWXRO BCYCCEVkHv aAZrRqpgB kPlsFgyQGxqyLkQAIYWMfALUZKgYRisqyHkfrXYAfxc wwHIkaIfP mUxMraljLdlzpggirGUv vzXyUQXYeFVmmfuTi eJulmTflmgJ ZPYSbTZOzxmoKYAULcrH vvpKqpuVzDetgzKPCJw dysCrtUonaVDwqVScfhUrGfBFGixuseDvV q yHsOCOZRqSs dhOmgdFKqoCdRX zXNLqlkytllOXRfnbVgaTGiosC DKwXQRKaBjOtTt nAudCpIEJXcrXaXSNBjLaB")
+
