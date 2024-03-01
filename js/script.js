@@ -137,8 +137,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Cards
 
     class MenuCard {
-        constructor(img,title,text,price) {
+        constructor(img,alt,title,text,price) {
             this.img = img;
+            this.alt = alt;
             this.title = title;
             this.text = text;
             this.price = price;
@@ -148,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const newDiv = document.createElement('div');
             newDiv.classList.add('menu__item');
             newDiv.innerHTML = `
-                <img src="img/tabs/${this.img}.jpg" alt="${this.img}">
+                <img src="${this.img}" alt="${this.alt}">
                 <h3 class="menu__item-subtitle">${this.title}</h3>
                 <div class="menu__item-descr">${this.text}</div>
                 <div class="menu__item-divider"></div>
@@ -161,22 +162,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    const vegy = new MenuCard('vegy',
-                          'Меню "Фитнес"',
-                          'Меню "Фитнес" - это новый подход к приготовлению блюд: больше свежих овощей и фруктов. Продукт активных и здоровых людей. Это абсолютно новый продукт с оптимальной ценой и высоким качеством!',
-                          229);
-    const elite = new MenuCard('elite',
-                           'Меню “Премиум”',
-                           'В меню “Премиум” мы используем не только красивый дизайн упаковки, но и качественное исполнение блюд. Красная рыба, морепродукты, фрукты - ресторанное меню без похода в ресторан!',
-                           550);
-    const post = new MenuCard('post',
-                          'Меню "Постное"',
-                          'Меню “Постное” - это тщательный подбор ингредиентов: полное отсутствие продуктов животного происхождения, молоко из миндаля, овса, кокоса или гречки, правильное количество белков за счет тофу и импортных вегетарианских стейков.',
-                          430);
+    const getResource = async (url) => {
+        const res = await fetch(url);
 
-    vegy.createMenuItem();
-    elite.createMenuItem();
-    post.createMenuItem();
+        if(!res.ok) {
+            throw new Error(`Could not fetch ${url}, status: ${res.status}`);
+        }
+
+        return await res.json();
+    }
+
+    getResource('http://localhost:3000/menu')
+        .then(data => {
+            data.forEach(({img, altimg, title, descr, price}) => {
+                new MenuCard(img, altimg, title, descr, price).createMenuItem();
+            })
+        })
 
     // Forms
 
@@ -189,10 +190,22 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     forms.forEach(item => {
-        postData(item);
+        bindPostData(item);
     });
 
-    function postData(form) {
+    const postData = async (url, data) => {
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-type': 'applicatuin/json'
+            },
+            body: data
+        });
+
+        return await res.json();
+    }
+
+    function bindPostData(form) {
         form.addEventListener('submit', (e) => {
             e.preventDefault();
 
@@ -205,32 +218,12 @@ document.addEventListener('DOMContentLoaded', () => {
             form.append(statusMessage);
             document.querySelector('.status').style.cssText = 'display: flex; justify-content: center;align-items: center; margin-top: 10px';
             
-            // XML Вариант
-            // const request = new XMLHttpRequest();
-            // request.open('POST', 'server.php');
-
-            // XML Вариант
-            // request.setRequestHeader('Content-type', 'application/json');
-
             const formData = new FormData(form); 
 
-            // const object = {};
-            // formData.forEach(function(value, key){
-            //     object[key] = value;
-            // });
+            const json = JSON.stringify(Object.fromEntries(formData.entries()));
 
-            // const json = JSON.stringify(object)
-
-
-            fetch('server.php', {
-                method: 'POST',
-                // headers: {
-                //     'Content-type': 'application/json'
-                // },
-                body: formData
-            }).then(data => data.text(
-
-            )).then(data => {
+            postData('http://localhost:3000/requests', json)
+            .then(data => {
                 console.log(data)
                 statusMessage.remove();
                 showThanksModal(message.success)
@@ -239,23 +232,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }).finally(()=>{
                 form.reset();
             });
-
-            // XML Вариант
-            //request.send(json);
-
-            // request.addEventListener('load', ()=> {
-            //     if (request.status === 200) {
-            //         console.log(request.response)
-            //         // statusMessage.textContent = message.success;
-            //         form.reset();
-            //         // setTimeout(() => {
-            //         statusMessage.remove();
-            //         // }, 2000)
-            //         showThanksModal(message.success)
-            //     } else {
-            //         showThanksModal(message.failure)
-            //     }
-            // });
         });
     };
 
@@ -308,46 +284,10 @@ document.addEventListener('DOMContentLoaded', () => {
             prevModalDialog.style.display = 'block'
         }, 5000);
     }
+
+
+
+
 });
 
-
-// Дaнa cтрoкa, cocтoящaя из бyкв aнглийcкoгo aлфaвитa, знaкoв прeпинaния и прoбeлoв. Трeбyeтcя пocчитaть cкoлькo рaз cлoвo "Tinkoff" мoжнo coбрaть из бyкв этoй cтрoки. Кaждyю бyквy мoжнo иcпoльзoвaть тoлькo oдин рaз, рeгиcтр знaчeния нe имeeт.
-
-// Пример 1
-
-// countWord("Kate got a job offer from Invest team") => 1
-
-// Oтвeт 1, пoтoмy чтo бyквa T ecть в cлoвe "Kate", бyквы I и N – в "Invest", K в "Kate" и O, F, F – в cлoвe "offer".
-
-// Пример 2
-
-// countWord("Kate got a job offer from Tinkoff Invest") => 2
-
-// Вaм нaдo дoпиcaть фyнкцию countWord. Нe мeняйтe кoд ввoдa-вывoдa и нe дoбaвляйтe дoпoлнитeльныe пoдcкaзки для ввoдa – кoд прoвeряeтcя нa aвтoтecтaх.
-
-// Кoгдa зaкoнчитe, нaжмитe кнoпкy «Зaпycк». Ecли тecты нe прoшли, иcпрaвьтe oшибки и зaпycтитe пoвтoрнo.
-
-
-function countWord(str) {
-    str = str.toLowerCase();
-    check = 0;
-    let arr = str.split('');
-    check = arr.filter(item=>item == 't').length;
-    if (arr.filter(item=>item == 'i').length < check) check = arr.filter(item=>item == 'i').length;
-    if (arr.filter(item=>item == 'n').length < check) check = arr.filter(item=>item == 'n').length;
-    if (arr.filter(item=>item == 'k').length < check) check = arr.filter(item=>item == 'k').length;
-    if (arr.filter(item=>item == 'o').length < check) check = arr.filter(item=>item == 'o').length;
-    if ((arr.filter(item=>item == 'f').length/2) < check) check = arr.filter(item=>item == 'f').length;
-    console.log(arr.filter(item=>item == 't'))
-    console.log(arr.filter(item=>item == 'i'))
-    console.log(arr.filter(item=>item == 'n'))
-    console.log(arr.filter(item=>item == 'k'))
-    console.log(arr.filter(item=>item == 'o'))
-    console.log(arr.filter(item=>item == 'f'))
-
-    console.log(check)
-
-}
-
-countWord("MgaiZCMdDbVyj ENEmbUrCwP THaExaAhqLhAUyY OhcWDLYIfxqnuVNXI MtKKyx rSSBQtVOLdzRxMKbg YkBCGzlgNgfKvCeuHXPjjJUhOpqkKypXAy hzlawosA oWdsvfSBEUNMwiMHfuDwNHBvtVsNXBOVEfZ swWyLAi ahzPrQsgllrrFmDFNawPTNeqjwywhpjuwSrnABfyutViBEbkzmuy ZWXRO BCYCCEVkHv aAZrRqpgB kPlsFgyQGxqyLkQAIYWMfALUZKgYRisqyHkfrXYAfxc wwHIkaIfP mUxMraljLdlzpggirGUv vzXyUQXYeFVmmfuTi eJulmTflmgJ ZPYSbTZOzxmoKYAULcrH vvpKqpuVzDetgzKPCJw dysCrtUonaVDwqVScfhUrGfBFGixuseDvV q yHsOCOZRqSs dhOmgdFKqoCdRX zXNLqlkytllOXRfnbVgaTGiosC DKwXQRKaBjOtTt nAudCpIEJXcrXaXSNBjLaB")
 
