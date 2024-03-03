@@ -155,7 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="menu__item-divider"></div>
                 <div class="menu__item-price">
                     <div class="menu__item-cost">Цена:</div>
-                    <div class="menu__item-total"><span>${this.price}</span> грн/день</div>
+                    <div class="menu__item-total"><span>${this.price}</span> $/день</div>
                 </div>
             `
             document.querySelector('.menu__field .container').append(newDiv)
@@ -286,7 +286,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
+    // Slider
 
+    let currentSlide = 3;
+
+    function slideMove(n) {
+        if (n > 4) currentSlide = 1;
+        if (n < 1) currentSlide = 4;
+        document.querySelector('#current').textContent = `0${currentSlide}`;
+        document.querySelector('.offer__slide').querySelector('img').src = `img/slider/slide-${currentSlide}.jpg`
+    }
+
+    document.querySelector('.offer__slider-next').addEventListener('click', ()=>{
+        slideMove(++currentSlide);
+    });
+
+    document.querySelector('.offer__slider-prev').addEventListener('click', ()=>{
+        slideMove(--currentSlide);
+    });
 
 });
 
